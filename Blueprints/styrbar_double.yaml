@@ -1,0 +1,390 @@
+blueprint:
+  name: IKEA Styrbar Controls double press (Z2M)
+  description: '## Control anything with IKEA Styrbar Dimmer remote (v1.0)
+
+
+    Only for use with Zigbee2MQTT ([MQTT](https://www.home-assistant.io/integrations/mqtt)
+    + [Z2M addon](https://www.zigbee2mqtt.io/guide/installation/03_ha_addon.html)).
+
+    Adapted from https://gist.github.com/amorfinvdev/ece1a0873759f908429a5c01c8426dce
+
+    Available controls:
+
+    - Press the **ON**, **OFF**, **Left** or **Right** buttons
+
+    - Press and hold the **ON**/**OFF**/**Left**/**Right** buttons. 
+      Actions will be executed every **Helper - Hold delay**, but maximum **Helper - Max number of loops** times. '
+  domain: automation
+  input:
+    remote_name:
+      name: (Zigbee2MQTT) Remote Name
+      description: The name of the controller (e.g. IKEA Styrbar).
+      default: ''
+      selector:
+        entity:
+          domain:
+          - sensor
+          multiple: false
+    base_topic:
+      name: (Zigbee2MQTT) Base mqtt topic
+      description: The topic configured in [Z2M addon](https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html).
+      default: zigbee2mqtt
+    on_press_action:
+      name: ON - Single press action
+      description: Choose action(s) to run when **ON** button is pressed.
+      default: []
+      selector:
+        action: {}
+    on_double_press_action:
+      name: ON - Double press action
+      description: Choose action(s) to run when **ON** is double-pressed.
+      default: []
+      selector:
+        action: {}
+    on_hold_action:
+      name: ON - Hold action
+      description: Choose action(s) to run when **ON** button is **pressed and
+        hold**.
+      default: []
+      selector:
+        action: {}    
+    off_press_action:
+      name: OFF - Single press action
+      description: Choose action(s) to run when **OFF** button is pressed.
+      default: []
+      selector:
+        action: {}
+    off_double_press_action:
+      name: OFF - Double press action
+      description: Choose action(s) to run when **OFF** is double-pressed.
+      default: []
+      selector:
+        action: {}
+    off_hold_action:
+      name: OFF - Hold action
+      description: Choose action(s) to run when **OFF** button is **pressed and
+        hold**.
+      default: []
+      selector:
+        action: {}  
+    left_press_action:
+      name: Left - Single press action
+      description: Choose action(s) to run when **Left** button is pressed.
+      default: []
+      selector:
+        action: {}
+    left_double_press_action:
+      name: Left - Double press action
+      description: Choose action(s) to run when **Left** is double-pressed.
+      default: []
+      selector:
+        action: {}
+    left_hold_action:
+      name: Left - Hold action
+      description: Choose action(s) to run when **Left** button is **pressed and
+        hold**.
+      default: []
+      selector:
+        action: {} 
+    right_press_action:
+      name: Right - Single press action
+      description: Choose action(s) to run when **Right** button is pressed.
+      default: []
+      selector:
+        action: {}
+    right_double_press_action:
+      name: Right - Double press action
+      description: Choose action(s) to run when **Right** is double-pressed.
+      default: []
+      selector:
+        action: {}
+    right_hold_action:
+      name: Right - Hold action
+      description: Choose action(s) to run when **Right** button is **pressed and
+        hold**.
+      default: []
+      selector:
+        action: {}
+    helper_double_window:
+      name: Helper - Double press window
+      description: Max time between two presses to count as double (ms).
+      default: 350
+      selector:
+        number:
+          min: 150
+          max: 1000
+          step: 10
+          unit_of_measurement: ms
+          mode: slider        
+    helper_hold_delay:
+      name: Helper - Hold delay
+      description: Delay between the execution of the **Hold** action(s).
+      default: 250
+      selector:
+        number:
+          unit_of_measurement: milliseconds
+          min: 100.0
+          max: 5000.0
+          step: 10.0
+          mode: slider
+    helper_max_loops:
+      name: Helper - Max number of loops
+      description: Maximum number of loops when holding down a button.
+      default: 20
+      selector:
+        number:
+          min: 1.0
+          max: 1000.0
+          step: 1.0
+          mode: slider
+mode: single
+max_exceeded: silent
+trigger_variables:
+  z2m_base_topic: !input base_topic
+  z2m_controller: !input remote_name
+trigger:
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: 'on'
+  id: press-on-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: brightness_move_up
+  id: hold-on-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: brightness_stop
+  id: release-on-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: 'off'
+  id: press-off-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: brightness_move_down
+  id: hold-off-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: brightness_stop
+  id: release-off-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: 'arrow_left_click'
+  id: press-left-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: arrow_left_hold
+  id: hold-left-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: arrow_left_release
+  id: release-left-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: 'arrow_right_click'
+  id: press-right-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: arrow_right_hold
+  id: hold-right-z2m
+- platform: mqtt
+  topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
+  payload: arrow_right_release
+  id: release-right-z2m
+action:
+- variables:
+    z2m_base_topic: !input base_topic
+    z2m_controller: !input remote_name
+- choose:
+  - conditions:
+    - condition: trigger
+      id:
+      - press-on-z2m
+    sequence:
+      - wait_for_trigger:
+          - platform: mqtt
+            topic: '{{ z2m_base_topic ~ "/" ~ z2m_controller ~ "/action" }}'
+            payload: 'on'
+        timeout:
+          milliseconds: !input helper_double_window
+        continue_on_timeout: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: '{{ wait.trigger is defined }}'
+            sequence: !input on_double_press_action
+        default: !input on_press_action
+  - conditions:
+    - condition: trigger
+      id:
+      - hold-on-z2m
+    sequence:
+    - repeat:
+        count: !input helper_max_loops
+        sequence:
+        - parallel:
+          - sequence: !input on_hold_action
+          - sequence:
+            - choose:
+              - conditions:
+                - condition: trigger
+                  id:
+                  - hold-on-z2m
+                sequence:
+                - wait_for_trigger:
+                  - platform: mqtt
+                    topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action''
+                      }}'
+                    payload: brightness_stop
+                  timeout:
+                    milliseconds: !input helper_hold_delay
+                  continue_on_timeout: true
+                - if:
+                  - condition: template
+                    value_template: '{{ wait.trigger.idx is defined }}'
+                  then:
+                  - stop: button released
+  - conditions:
+    - condition: trigger
+      id:
+      - press-off-z2m
+    sequence:
+      - wait_for_trigger:
+          - platform: mqtt
+            topic: '{{ z2m_base_topic ~ "/" ~ z2m_controller ~ "/action" }}'
+            payload: 'off'
+        timeout:
+          milliseconds: !input helper_double_window
+        continue_on_timeout: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: '{{ wait.trigger is defined }}'
+            sequence: !input off_double_press_action
+        default: !input off_press_action
+  - conditions:
+    - condition: trigger
+      id:
+      - hold-off-z2m
+    sequence:
+    - repeat:
+        count: !input helper_max_loops
+        sequence:
+        - parallel:
+          - sequence: !input off_hold_action
+          - sequence:
+            - choose:
+              - conditions:
+                - condition: trigger
+                  id:
+                  - hold-off-z2m
+                sequence:
+                - wait_for_trigger:
+                  - platform: mqtt
+                    topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action''
+                      }}'
+                    payload: brightness_stop
+                  timeout:
+                    milliseconds: !input helper_hold_delay
+                  continue_on_timeout: true
+                - if:
+                  - condition: template
+                    value_template: '{{ wait.trigger.idx is defined }}'
+                  then:
+                  - stop: button released
+  - conditions:
+    - condition: trigger
+      id:
+      - press-left-z2m
+    sequence:
+      - wait_for_trigger:
+          - platform: mqtt
+            topic: '{{ z2m_base_topic ~ "/" ~ z2m_controller ~ "/action" }}'
+            payload: 'arrow_left_click'
+        timeout:
+          milliseconds: !input helper_double_window
+        continue_on_timeout: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: '{{ wait.trigger is defined }}'
+            sequence: !input left_double_press_action
+        default: !input left_press_action
+  - conditions:
+    - condition: trigger
+      id:
+      - hold-left-z2m
+    sequence:
+    - repeat:
+        count: !input helper_max_loops
+        sequence:
+        - parallel:
+          - sequence: !input left_hold_action
+          - sequence:
+            - choose:
+              - conditions:
+                - condition: trigger
+                  id:
+                  - hold-left-z2m
+                sequence:
+                - wait_for_trigger:
+                  - platform: mqtt
+                    topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action''
+                      }}'
+                    payload: arrow_left_release
+                  timeout:
+                    milliseconds: !input helper_hold_delay
+                  continue_on_timeout: true
+                - if:
+                  - condition: template
+                    value_template: '{{ wait.trigger.idx is defined }}'
+                  then:
+                  - stop: button released
+  - conditions:
+    - condition: trigger
+      id:
+      - press-right-z2m
+    sequence:
+      - wait_for_trigger:
+          - platform: mqtt
+            topic: '{{ z2m_base_topic ~ "/" ~ z2m_controller ~ "/action" }}'
+            payload: 'arrow_right_click'
+        timeout:
+          milliseconds: !input helper_double_window
+        continue_on_timeout: true
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: '{{ wait.trigger is defined }}'
+            sequence: !input right_double_press_action
+        default: !input right_press_action
+  - conditions:
+    - condition: trigger
+      id:
+      - hold-right-z2m
+    sequence:
+    - repeat:
+        count: !input helper_max_loops
+        sequence:
+        - parallel:
+          - sequence: !input right_hold_action
+          - sequence:
+            - choose:
+              - conditions:
+                - condition: trigger
+                  id:
+                  - hold-right-z2m
+                sequence:
+                - wait_for_trigger:
+                  - platform: mqtt
+                    topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action''
+                      }}'
+                    payload: arrow_right_release
+                  timeout:
+                    milliseconds: !input helper_hold_delay
+                  continue_on_timeout: true
+                - if:
+                  - condition: template
+                    value_template: '{{ wait.trigger.idx is defined }}'
+                  then:
+                  - stop: button released

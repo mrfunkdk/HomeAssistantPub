@@ -22,8 +22,6 @@ blueprint:
       default: ''
       selector:
         entity:
-          domain:
-          - sensor
           multiple: false
     base_topic:
       name: (Zigbee2MQTT) Base mqtt topic
@@ -387,4 +385,5 @@ action:
                   - condition: template
                     value_template: '{{ wait.trigger.idx is defined }}'
                   then:
+
                   - stop: button released

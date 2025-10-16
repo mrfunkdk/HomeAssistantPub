@@ -21,9 +21,7 @@ blueprint:
       description: The name of the controller (e.g. IKEA Styrbar).
       default: ''
       selector:
-        entity:
-          domain:
-          - sensor
+        device:
           multiple: false
     base_topic:
       name: (Zigbee2MQTT) Base mqtt topic

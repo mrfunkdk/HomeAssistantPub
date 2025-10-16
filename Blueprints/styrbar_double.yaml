@@ -1,6 +1,6 @@
 blueprint:
   name: IKEA Styrbar Controls double press (Z2M)
-  description: '## Control anything with IKEA Styrbar Dimmer remote (v1.2)
+  description: '## Control anything with IKEA Styrbar Dimmer remote (v1.3)
 
 
     Only for use with Zigbee2MQTT ([MQTT](https://www.home-assistant.io/integrations/mqtt)
@@ -387,3 +387,4 @@ action:
                   then:
 
                   - stop: button released
+

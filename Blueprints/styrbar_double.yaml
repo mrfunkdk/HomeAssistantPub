@@ -209,7 +209,7 @@ action:
       - choose:
           - conditions:
               - condition: template
-                value_template: '{{ wait.trigger is not none }}'
+                value_template: '{{ wait.completed }}'
             sequence: !input on_double_press_action
         default: !input on_press_action
   - conditions:
@@ -257,7 +257,7 @@ action:
       - choose:
           - conditions:
               - condition: template
-                value_template: '{{ wait.trigger is not none }}'
+                value_template: '{{ wait.completed }}'
             sequence: !input off_double_press_action
         default: !input off_press_action
   - conditions:
@@ -305,7 +305,7 @@ action:
       - choose:
           - conditions:
               - condition: template
-                value_template: '{{ wait.trigger is not none }}'
+                value_template: '{{ wait.completed }}'
             sequence: !input left_double_press_action
         default: !input left_press_action
   - conditions:
@@ -353,7 +353,7 @@ action:
       - choose:
           - conditions:
               - condition: template
-                value_template: '{{ wait.trigger is not none }}'
+                value_template: '{{ wait.completed }}'
             sequence: !input right_double_press_action
         default: !input right_press_action
   - conditions:
@@ -387,7 +387,3 @@ action:
                   then:
 
                   - stop: button released
-
-
-
-

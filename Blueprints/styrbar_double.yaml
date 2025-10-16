@@ -21,8 +21,8 @@ blueprint:
       description: The name of the controller (e.g. IKEA Styrbar).
       default: ''
       selector:
-        text:
-          multiline: false
+        device:
+          multiple: false
     base_topic:
       name: (Zigbee2MQTT) Base mqtt topic
       description: The topic configured in [Z2M addon](https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html).
@@ -139,7 +139,8 @@ mode: single
 max_exceeded: silent
 trigger_variables:
   z2m_base_topic: !input base_topic
-  z2m_controller: !input remote_name
+  remote_device: !input remote_name
+  z2m_controller: "{{ device_attr(remote_device, 'name_by_user') or device_name(remote_device) }}"
 trigger:
 - platform: mqtt
   topic: '{{ z2m_base_topic ~ ''/'' ~ z2m_controller ~ ''/action'' }}'
@@ -192,7 +193,8 @@ trigger:
 action:
 - variables:
     z2m_base_topic: !input base_topic
-    z2m_controller: !input remote_name
+    remote_device: !input remote_name
+    z2m_controller: "{{ device_attr(remote_device, 'name_by_user') or device_name(remote_device) }}"
 - choose:
   - conditions:
     - condition: trigger
@@ -387,5 +389,6 @@ action:
                   then:
 
                   - stop: button released
+
 
 

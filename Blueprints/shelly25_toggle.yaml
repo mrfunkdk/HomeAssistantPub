@@ -1,9 +1,9 @@
 blueprint:
-  name: Tasmota (Shelly 2.5) - Wall press toggles relays via MQTT RESULT
+  name: Tasmota Detached Switch - Run actions on Switch1/Switch2 press (MQTT RESULT)
   description: >
-    Toggle one or two relays when a Tasmota device reports Switch1/Switch2 press on the
-    stat/<topic>/RESULT MQTT topic. Works with payload styles:
-    {"Switch1":"ON"} and {"Switch1":{"Action":"ON"}} (and TOGGLE).
+    Run any Home Assistant actions (scripts, switches, lights, scenes, etc.) when a Tasmota device
+    publishes Switch1/Switch2 events to its stat/<topic>/RESULT MQTT topic. Supports payloads:
+    {"Switch1":"ON"}, {"Switch1":{"Action":"ON"}}, and TOGGLE variants.
   domain: automation
   input:
     mqtt_topic:
@@ -11,18 +11,54 @@ blueprint:
       description: "Example: stat/shelly25/RESULT"
       selector:
         text:
-    relay_1:
-      name: Relay 1 entity
-      description: Switch entity to toggle when Switch1 press is received
+
+    switch1_values:
+      name: Switch1 trigger values
+      description: Values that count as a "press" for Switch1
+      default:
+        - "ON"
+        - "TOGGLE"
       selector:
-        entity:
-          domain: switch
-    relay_2:
-      name: Relay 2 entity
-      description: Switch entity to toggle when Switch2 press is received
+        select:
+          multiple: true
+          options:
+            - "ON"
+            - "OFF"
+            - "TOGGLE"
+            - "HOLD"
+            - "DOUBLE"
+            - "SINGLE"
+            - "1"
+            - "0"
+
+    switch2_values:
+      name: Switch2 trigger values
+      description: Values that count as a "press" for Switch2
+      default:
+        - "ON"
+        - "TOGGLE"
       selector:
-        entity:
-          domain: switch
+        select:
+          multiple: true
+          options:
+            - "ON"
+            - "OFF"
+            - "TOGGLE"
+            - "HOLD"
+            - "DOUBLE"
+            - "SINGLE"
+            - "1"
+            - "0"
+
+    switch1_action:
+      name: Action to run on Switch1 press
+      selector:
+        action: {}
+
+    switch2_action:
+      name: Action to run on Switch2 press
+      selector:
+        action: {}
 
 mode: single
 
@@ -31,39 +67,35 @@ trigger:
     topic: !input mqtt_topic
 
 variables:
-  relay_1: !input relay_1
-  relay_2: !input relay_2
+  s1_values: !input switch1_values
+  s2_values: !input switch2_values
 
+  # Extract Switch1 event value from either {"Switch1":"ON"} or {"Switch1":{"Action":"ON"}}
   s1: >-
     {% if trigger.payload_json is mapping %}
       {% set v = trigger.payload_json.get('Switch1') %}
       {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
     {% else %}
-      {{ None }}
+      {{ none }}
     {% endif %}
 
+  # Extract Switch2 event value
   s2: >-
     {% if trigger.payload_json is mapping %}
       {% set v = trigger.payload_json.get('Switch2') %}
       {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
     {% else %}
-      {{ None }}
+      {{ none }}
     {% endif %}
 
 action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ s1 in ['ON', 'TOGGLE'] }}"
-        sequence:
-          - service: switch.toggle
-            target:
-              entity_id: !input relay_1
+            value_template: "{{ s1 is not none and (s1|string) in s1_values }}"
+        sequence: !input switch1_action
 
       - conditions:
           - condition: template
-            value_template: "{{ s2 in ['ON', 'TOGGLE'] }}"
-        sequence:
-          - service: switch.toggle
-            target:
-              entity_id: !input relay_2
+            value_template: "{{ s2 is not none and (s2|string) in s2_values }}"
+        sequence: !input switch2_action

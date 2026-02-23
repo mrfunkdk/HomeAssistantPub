@@ -1,0 +1,60 @@
+blueprint:
+  name: Tasmota (Shelly 2.5) - Wall press toggles relays via MQTT RESULT (SwitchMode 4 friendly)
+  description: >
+    Toggle one or two relays when a Tasmota device reports Switch1/Switch2 press on stat/<topic>/RESULT.
+    Works with payload styles:
+      - {"Switch1":"ON"}
+      - {"Switch1":{"Action":"ON"}} (or "TOGGLE")
+  domain: automation
+  input:
+    mqtt_topic:
+      name: MQTT topic (RESULT)
+      description: Example: stat/shelly25/RESULT
+      selector:
+        text:
+    relay_1:
+      name: Relay 1 entity
+      selector:
+        entity:
+          domain: switch
+    relay_2:
+      name: Relay 2 entity
+      selector:
+        entity:
+          domain: switch
+
+mode: single
+
+trigger:
+  - platform: mqtt
+    topic: !input mqtt_topic
+
+variables:
+  relay_1: !input relay_1
+  relay_2: !input relay_2
+
+  # Extract "press event" values robustly for both payload formats
+  s1: >
+    {% set v = trigger.payload_json.get('Switch1') if trigger.payload_json is mapping else None %}
+    {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+  s2: >
+    {% set v = trigger.payload_json.get('Switch2') if trigger.payload_json is mapping else None %}
+    {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ s1 in ['ON','TOGGLE'] }}"
+        sequence:
+          - service: switch.toggle
+            target:
+              entity_id: "{{ relay_1 }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ s2 in ['ON','TOGGLE'] }}"
+        sequence:
+          - service: switch.toggle
+            target:
+              entity_id: "{{ relay_2 }}"

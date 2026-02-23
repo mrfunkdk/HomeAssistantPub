@@ -1,24 +1,25 @@
 blueprint:
-  name: Tasmota (Shelly 2.5) - Wall press toggles relays via MQTT RESULT (SwitchMode 4 friendly)
+  name: Tasmota (Shelly 2.5) - Wall press toggles relays via MQTT RESULT
   description: >
-    Toggle one or two relays when a Tasmota device reports Switch1/Switch2 press on stat/<topic>/RESULT.
-    Works with payload styles:
-      - {"Switch1":"ON"}
-      - {"Switch1":{"Action":"ON"}} (or "TOGGLE")
+    Toggle one or two relays when a Tasmota device reports Switch1/Switch2 press on the
+    stat/<topic>/RESULT MQTT topic. Works with payload styles:
+    {"Switch1":"ON"} and {"Switch1":{"Action":"ON"}} (and TOGGLE).
   domain: automation
   input:
     mqtt_topic:
       name: MQTT topic (RESULT)
-      description: Example: stat/shelly25/RESULT
+      description: "Example: stat/shelly25/RESULT"
       selector:
         text:
     relay_1:
       name: Relay 1 entity
+      description: Switch entity to toggle when Switch1 press is received
       selector:
         entity:
           domain: switch
     relay_2:
       name: Relay 2 entity
+      description: Switch entity to toggle when Switch2 press is received
       selector:
         entity:
           domain: switch
@@ -33,28 +34,36 @@ variables:
   relay_1: !input relay_1
   relay_2: !input relay_2
 
-  # Extract "press event" values robustly for both payload formats
-  s1: >
-    {% set v = trigger.payload_json.get('Switch1') if trigger.payload_json is mapping else None %}
-    {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
-  s2: >
-    {% set v = trigger.payload_json.get('Switch2') if trigger.payload_json is mapping else None %}
-    {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+  s1: >-
+    {% if trigger.payload_json is mapping %}
+      {% set v = trigger.payload_json.get('Switch1') %}
+      {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+    {% else %}
+      {{ None }}
+    {% endif %}
+
+  s2: >-
+    {% if trigger.payload_json is mapping %}
+      {% set v = trigger.payload_json.get('Switch2') %}
+      {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+    {% else %}
+      {{ None }}
+    {% endif %}
 
 action:
   - choose:
       - conditions:
           - condition: template
-            value_template: "{{ s1 in ['ON','TOGGLE'] }}"
+            value_template: "{{ s1 in ['ON', 'TOGGLE'] }}"
         sequence:
           - service: switch.toggle
             target:
-              entity_id: "{{ relay_1 }}"
+              entity_id: !input relay_1
 
       - conditions:
           - condition: template
-            value_template: "{{ s2 in ['ON','TOGGLE'] }}"
+            value_template: "{{ s2 in ['ON', 'TOGGLE'] }}"
         sequence:
           - service: switch.toggle
             target:
-              entity_id: "{{ relay_2 }}"
+              entity_id: !input relay_2

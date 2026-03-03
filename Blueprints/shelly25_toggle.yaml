@@ -1,5 +1,5 @@
 blueprint:
-  name: Tasmota Detached Switch - Run actions on Switch1/Switch2 press (MQTT RESULT)
+  name: Tasmota Detached Switch - Switch1/Switch2 toggle (MQTT RESULT)
   description: >
     Run any Home Assistant actions (scripts, switches, lights, scenes, etc.) when a Tasmota device
     publishes Switch1/Switch2 events to its stat/<topic>/RESULT MQTT topic. Supports payloads:

@@ -1,0 +1,91 @@
+blueprint:
+  name: Tasmota Detached Switch - Switch1/Switch2 ON/OFF/TOGGLE (MQTT RESULT)
+  description: >
+    Run Home Assistant actions when a Tasmota device publishes Switch1/Switch2 events
+    to stat/<topic>/RESULT. Supports payloads like {"Switch1":"ON"} or {"Switch1":{"Action":"ON"}}.
+    OFF can run a separate action. TOGGLE is treated as ON (runs ON action).
+  domain: automation
+
+  input:
+    mqtt_topic:
+      name: MQTT topic (RESULT)
+      description: "Example: stat/shelly25/RESULT"
+      selector:
+        text:
+
+    # Switch1 actions
+    switch1_on_action:
+      name: Action to run on Switch1 ON (and TOGGLE)
+      selector:
+        action: {}
+
+    switch1_off_action:
+      name: Action to run on Switch1 OFF
+      selector:
+        action: {}
+
+    # Switch2 actions
+    switch2_on_action:
+      name: Action to run on Switch2 ON (and TOGGLE)
+      selector:
+        action: {}
+
+    switch2_off_action:
+      name: Action to run on Switch2 OFF
+      selector:
+        action: {}
+
+mode: single
+
+trigger:
+  - platform: mqtt
+    topic: !input mqtt_topic
+
+variables:
+  # Extract Switch1 value from either {"Switch1":"ON"} or {"Switch1":{"Action":"ON"}}
+  s1: >-
+    {% if trigger.payload_json is mapping %}
+      {% set v = trigger.payload_json.get('Switch1') %}
+      {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+    {% else %}
+      {{ none }}
+    {% endif %}
+
+  # Extract Switch2 value
+  s2: >-
+    {% if trigger.payload_json is mapping %}
+      {% set v = trigger.payload_json.get('Switch2') %}
+      {% if v is mapping %}{{ v.get('Action') }}{% else %}{{ v }}{% endif %}
+    {% else %}
+      {{ none }}
+    {% endif %}
+
+  # Normalize to uppercase strings for comparisons
+  s1v: "{{ (s1|string)|upper if s1 is not none else none }}"
+  s2v: "{{ (s2|string)|upper if s2 is not none else none }}"
+
+action:
+  - choose:
+      # Switch1 OFF => OFF action
+      - conditions:
+          - condition: template
+            value_template: "{{ s1v == 'OFF' }}"
+        sequence: !input switch1_off_action
+
+      # Switch1 ON or TOGGLE => ON action
+      - conditions:
+          - condition: template
+            value_template: "{{ s1v in ['ON','TOGGLE'] }}"
+        sequence: !input switch1_on_action
+
+      # Switch2 OFF => OFF action
+      - conditions:
+          - condition: template
+            value_template: "{{ s2v == 'OFF' }}"
+        sequence: !input switch2_off_action
+
+      # Switch2 ON or TOGGLE => ON action
+      - conditions:
+          - condition: template
+            value_template: "{{ s2v in ['ON','TOGGLE'] }}"
+        sequence: !input switch2_on_action

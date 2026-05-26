@@ -1,0 +1,168 @@
+blueprint:
+  name: Home Connect Local - Appliance Done and Event Notifications
+  description: >
+    Sends a mobile notification when a Home Connect Local appliance cycle is done,
+    repeats the notification until the door is opened, and sends custom notifications
+    for Home Connect Local event/error entities.
+  domain: automation
+
+  input:
+    appliance_name:
+      name: Appliance name
+      description: Friendly name used in notifications, for example Washing machine, Dryer, Dishwasher.
+      default: "Appliance"
+      selector:
+        text:
+
+    notify_service:
+      name: Mobile notify service
+      description: >
+        Example: notify.mobile_app_pixel_9a
+      selector:
+        text:
+
+    done_entity:
+      name: Cycle done entity
+      description: >
+        Select the Home Connect Local ProgramFinished event entity if available.
+        This is usually based on BSH.Common.Event.ProgramFinished / UID 021C.
+        If you do not have that entity, you can use an operation state sensor and set the done state below.
+      selector:
+        entity:
+
+    done_state:
+      name: Done state
+      description: >
+        State that means the cycle is done. For a ProgramFinished binary sensor this is usually "on".
+        For an operation state sensor it may be "Finished".
+      default: "on"
+      selector:
+        text:
+
+    door_entity:
+      name: Door state entity
+      description: >
+        Select the Home Connect Local door state entity.
+        This is usually based on BSH.Common.Status.DoorState / UID 020F.
+      selector:
+        entity:
+
+    repeat_minutes:
+      name: Repeat interval in minutes
+      description: How often to repeat the done notification while the door is still closed.
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 240
+          unit_of_measurement: minutes
+          mode: box
+
+    event_entities:
+      name: Event/error entities
+      description: >
+        Select Home Connect Local event/error entities.
+        These are usually named from features like LaundryCare.Washer.Event.*, LaundryCare.Dryer.Event.*,
+        or Dishcare.Dishwasher.Event.*.
+      selector:
+        entity:
+          multiple: true
+
+    event_active_state:
+      name: Event active state
+      description: >
+        State that means the event/error is active. For binary sensors this is usually "on".
+      default: "on"
+      selector:
+        text:
+
+    event_text_map:
+      name: Custom event text map
+      description: >
+        Optional map from entity_id to custom text.
+        Example:
+        binary_sensor.washer_pump_error: "4007 - Pump error. Check the drain filter and drain hose."
+      default: {}
+      selector:
+        object:
+
+    default_event_text:
+      name: Default event text
+      description: Used when an event entity is not found in the custom event text map.
+      default: "Home Connect Local event is active."
+      selector:
+        text:
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input done_entity
+    to: !input done_state
+    id: cycle_done
+
+  - platform: state
+    entity_id: !input event_entities
+    to: !input event_active_state
+    id: appliance_event
+
+variables:
+  appliance_name: !input appliance_name
+  notify_service: !input notify_service
+  door_entity: !input door_entity
+  repeat_minutes: !input repeat_minutes
+  event_text_map: !input event_text_map
+  default_event_text: !input default_event_text
+
+  door_is_open: >
+    {% set s = states(door_entity) | lower %}
+    {{ s in ['open', 'opened', 'on', 'true'] }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: cycle_done
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} finished"
+              message: "{{ appliance_name }} is done. Open the door to stop reminders."
+
+          - repeat:
+              until:
+                - condition: template
+                  value_template: >
+                    {% set s = states(door_entity) | lower %}
+                    {{ s in ['open', 'opened', 'on', 'true'] }}
+              sequence:
+                - delay:
+                    minutes: !input repeat_minutes
+
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: >
+                            {% set s = states(door_entity) | lower %}
+                            {{ s not in ['open', 'opened', 'on', 'true'] }}
+                      sequence:
+                        - service: "{{ notify_service }}"
+                          data:
+                            title: "{{ appliance_name }} still finished"
+                            message: "{{ appliance_name }} is still done. Open the door to stop reminders."
+
+      - conditions:
+          - condition: trigger
+            id: appliance_event
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: >
+                {% set entity = trigger.entity_id %}
+                {% set friendly = state_attr(entity, 'friendly_name') or entity %}
+                {% set custom_text = event_text_map.get(entity, default_event_text) %}
+                {{ custom_text }}
+
+                Entity: {{ friendly }}
+                State: {{ trigger.to_state.state }}

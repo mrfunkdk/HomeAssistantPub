@@ -66,7 +66,7 @@ blueprint:
       name: Event 1 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_1_text:
       name: Event 1 notification text
@@ -78,7 +78,7 @@ blueprint:
       name: Event 2 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_2_text:
       name: Event 2 notification text
@@ -90,7 +90,7 @@ blueprint:
       name: Event 3 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_3_text:
       name: Event 3 notification text
@@ -102,7 +102,7 @@ blueprint:
       name: Event 4 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_4_text:
       name: Event 4 notification text
@@ -114,7 +114,7 @@ blueprint:
       name: Event 5 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_5_text:
       name: Event 5 notification text
@@ -126,7 +126,7 @@ blueprint:
       name: Event 6 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_6_text:
       name: Event 6 notification text
@@ -138,7 +138,7 @@ blueprint:
       name: Event 7 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_7_text:
       name: Event 7 notification text
@@ -150,7 +150,7 @@ blueprint:
       name: Event 8 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_8_text:
       name: Event 8 notification text
@@ -162,7 +162,7 @@ blueprint:
       name: Event 9 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_9_text:
       name: Event 9 notification text
@@ -174,7 +174,7 @@ blueprint:
       name: Event 10 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_10_text:
       name: Event 10 notification text
@@ -186,7 +186,7 @@ blueprint:
       name: Event 11 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_11_text:
       name: Event 11 notification text
@@ -198,7 +198,7 @@ blueprint:
       name: Event 12 entity
       default: ""
       selector:
-        entity:
+        text:
 
     event_12_text:
       name: Event 12 notification text
@@ -208,9 +208,15 @@ blueprint:
 
 mode: restart
 
+trigger:
+  - platform: event
+    event_type: state_changed
+
 variables:
   appliance_name: !input appliance_name
   notify_service: !input notify_service
+  done_entity: !input done_entity
+  done_state: !input done_state
   door_entity: !input door_entity
   door_open_states: !input door_open_states
   repeat_minutes: !input repeat_minutes
@@ -241,77 +247,24 @@ variables:
   event_12_entity: !input event_12_entity
   event_12_text: !input event_12_text
 
-trigger:
-  - platform: state
-    entity_id: !input done_entity
-    to: !input done_state
-    id: cycle_done
+  changed_entity: "{{ trigger.event.data.entity_id }}"
+  new_state: "{{ trigger.event.data.new_state.state if trigger.event.data.new_state is not none else '' }}"
 
-  - platform: state
-    entity_id: !input event_1_entity
-    to: !input event_active_state
-    id: event_1
-
-  - platform: state
-    entity_id: !input event_2_entity
-    to: !input event_active_state
-    id: event_2
-
-  - platform: state
-    entity_id: !input event_3_entity
-    to: !input event_active_state
-    id: event_3
-
-  - platform: state
-    entity_id: !input event_4_entity
-    to: !input event_active_state
-    id: event_4
-
-  - platform: state
-    entity_id: !input event_5_entity
-    to: !input event_active_state
-    id: event_5
-
-  - platform: state
-    entity_id: !input event_6_entity
-    to: !input event_active_state
-    id: event_6
-
-  - platform: state
-    entity_id: !input event_7_entity
-    to: !input event_active_state
-    id: event_7
-
-  - platform: state
-    entity_id: !input event_8_entity
-    to: !input event_active_state
-    id: event_8
-
-  - platform: state
-    entity_id: !input event_9_entity
-    to: !input event_active_state
-    id: event_9
-
-  - platform: state
-    entity_id: !input event_10_entity
-    to: !input event_active_state
-    id: event_10
-
-  - platform: state
-    entity_id: !input event_11_entity
-    to: !input event_active_state
-    id: event_11
-
-  - platform: state
-    entity_id: !input event_12_entity
-    to: !input event_active_state
-    id: event_12
+condition:
+  - condition: template
+    value_template: >
+      {{
+        trigger.event.data.new_state is not none
+        and trigger.event.data.old_state is not none
+        and trigger.event.data.new_state.state != trigger.event.data.old_state.state
+      }}
 
 action:
   - choose:
       - conditions:
-          - condition: trigger
-            id: cycle_done
+          - condition: template
+            value_template: >
+              {{ changed_entity == done_entity and new_state == done_state }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -337,8 +290,9 @@ action:
                     message: "{{ appliance_name }} is still done. Open the door to stop reminders."
 
       - conditions:
-          - condition: trigger
-            id: event_1
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_1_entity and new_state == event_active_state and event_1_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -346,8 +300,9 @@ action:
               message: "{{ event_1_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_2
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_2_entity and new_state == event_active_state and event_2_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -355,8 +310,9 @@ action:
               message: "{{ event_2_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_3
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_3_entity and new_state == event_active_state and event_3_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -364,8 +320,9 @@ action:
               message: "{{ event_3_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_4
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_4_entity and new_state == event_active_state and event_4_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -373,8 +330,9 @@ action:
               message: "{{ event_4_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_5
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_5_entity and new_state == event_active_state and event_5_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -382,8 +340,9 @@ action:
               message: "{{ event_5_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_6
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_6_entity and new_state == event_active_state and event_6_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -391,8 +350,9 @@ action:
               message: "{{ event_6_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_7
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_7_entity and new_state == event_active_state and event_7_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -400,8 +360,9 @@ action:
               message: "{{ event_7_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_8
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_8_entity and new_state == event_active_state and event_8_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -409,8 +370,9 @@ action:
               message: "{{ event_8_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_9
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_9_entity and new_state == event_active_state and event_9_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -418,8 +380,9 @@ action:
               message: "{{ event_9_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_10
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_10_entity and new_state == event_active_state and event_10_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -427,8 +390,9 @@ action:
               message: "{{ event_10_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_11
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_11_entity and new_state == event_active_state and event_11_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:
@@ -436,8 +400,9 @@ action:
               message: "{{ event_11_text }}"
 
       - conditions:
-          - condition: trigger
-            id: event_12
+          - condition: template
+            value_template: >
+              {{ changed_entity == event_12_entity and new_state == event_active_state and event_12_entity != '' }}
         sequence:
           - service: "{{ notify_service }}"
             data:

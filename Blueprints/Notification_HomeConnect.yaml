@@ -3,7 +3,7 @@ blueprint:
   description: >
     Notifications for Home Connect Local appliances.
     Sends a cycle-done notification, repeats it until the door is opened,
-    and sends custom notifications for boolean event/error entities.
+    and sends custom notifications for selected boolean event/error entities.
   domain: automation
 
   input:
@@ -39,8 +39,7 @@ blueprint:
 
     door_open_states:
       name: Door open states
-      description: >
-        States that stop the reminder loop. For your washer, use open and ajar.
+      description: "For your washer, use open and ajar."
       default:
         - open
         - ajar
@@ -57,33 +56,190 @@ blueprint:
           unit_of_measurement: minutes
           mode: box
 
-    event_entities:
-      name: Event/error boolean entities
-      selector:
-        entity:
-          multiple: true
-
     event_active_state:
       name: Event active state
       default: "on"
       selector:
         text:
 
-    event_text_map:
-      name: Custom event text map
-      description: >
-        Map entity_id to notification text.
-      default: {}
+    event_1_entity:
+      name: Event 1 entity
+      default: ""
       selector:
-        object:
+        entity:
 
-    default_event_text:
-      name: Default event text
-      default: "Home Connect Local event is active."
+    event_1_text:
+      name: Event 1 notification text
+      default: ""
+      selector:
+        text:
+
+    event_2_entity:
+      name: Event 2 entity
+      default: ""
+      selector:
+        entity:
+
+    event_2_text:
+      name: Event 2 notification text
+      default: ""
+      selector:
+        text:
+
+    event_3_entity:
+      name: Event 3 entity
+      default: ""
+      selector:
+        entity:
+
+    event_3_text:
+      name: Event 3 notification text
+      default: ""
+      selector:
+        text:
+
+    event_4_entity:
+      name: Event 4 entity
+      default: ""
+      selector:
+        entity:
+
+    event_4_text:
+      name: Event 4 notification text
+      default: ""
+      selector:
+        text:
+
+    event_5_entity:
+      name: Event 5 entity
+      default: ""
+      selector:
+        entity:
+
+    event_5_text:
+      name: Event 5 notification text
+      default: ""
+      selector:
+        text:
+
+    event_6_entity:
+      name: Event 6 entity
+      default: ""
+      selector:
+        entity:
+
+    event_6_text:
+      name: Event 6 notification text
+      default: ""
+      selector:
+        text:
+
+    event_7_entity:
+      name: Event 7 entity
+      default: ""
+      selector:
+        entity:
+
+    event_7_text:
+      name: Event 7 notification text
+      default: ""
+      selector:
+        text:
+
+    event_8_entity:
+      name: Event 8 entity
+      default: ""
+      selector:
+        entity:
+
+    event_8_text:
+      name: Event 8 notification text
+      default: ""
+      selector:
+        text:
+
+    event_9_entity:
+      name: Event 9 entity
+      default: ""
+      selector:
+        entity:
+
+    event_9_text:
+      name: Event 9 notification text
+      default: ""
+      selector:
+        text:
+
+    event_10_entity:
+      name: Event 10 entity
+      default: ""
+      selector:
+        entity:
+
+    event_10_text:
+      name: Event 10 notification text
+      default: ""
+      selector:
+        text:
+
+    event_11_entity:
+      name: Event 11 entity
+      default: ""
+      selector:
+        entity:
+
+    event_11_text:
+      name: Event 11 notification text
+      default: ""
+      selector:
+        text:
+
+    event_12_entity:
+      name: Event 12 entity
+      default: ""
+      selector:
+        entity:
+
+    event_12_text:
+      name: Event 12 notification text
+      default: ""
       selector:
         text:
 
 mode: restart
+
+variables:
+  appliance_name: !input appliance_name
+  notify_service: !input notify_service
+  door_entity: !input door_entity
+  door_open_states: !input door_open_states
+  repeat_minutes: !input repeat_minutes
+  event_active_state: !input event_active_state
+
+  event_1_entity: !input event_1_entity
+  event_1_text: !input event_1_text
+  event_2_entity: !input event_2_entity
+  event_2_text: !input event_2_text
+  event_3_entity: !input event_3_entity
+  event_3_text: !input event_3_text
+  event_4_entity: !input event_4_entity
+  event_4_text: !input event_4_text
+  event_5_entity: !input event_5_entity
+  event_5_text: !input event_5_text
+  event_6_entity: !input event_6_entity
+  event_6_text: !input event_6_text
+  event_7_entity: !input event_7_entity
+  event_7_text: !input event_7_text
+  event_8_entity: !input event_8_entity
+  event_8_text: !input event_8_text
+  event_9_entity: !input event_9_entity
+  event_9_text: !input event_9_text
+  event_10_entity: !input event_10_entity
+  event_10_text: !input event_10_text
+  event_11_entity: !input event_11_entity
+  event_11_text: !input event_11_text
+  event_12_entity: !input event_12_entity
+  event_12_text: !input event_12_text
 
 trigger:
   - platform: state
@@ -92,18 +248,64 @@ trigger:
     id: cycle_done
 
   - platform: state
-    entity_id: !input event_entities
+    entity_id: !input event_1_entity
     to: !input event_active_state
-    id: appliance_event
+    id: event_1
 
-variables:
-  appliance_name: !input appliance_name
-  notify_service: !input notify_service
-  door_entity: !input door_entity
-  door_open_states: !input door_open_states
-  repeat_minutes: !input repeat_minutes
-  event_text_map: !input event_text_map
-  default_event_text: !input default_event_text
+  - platform: state
+    entity_id: !input event_2_entity
+    to: !input event_active_state
+    id: event_2
+
+  - platform: state
+    entity_id: !input event_3_entity
+    to: !input event_active_state
+    id: event_3
+
+  - platform: state
+    entity_id: !input event_4_entity
+    to: !input event_active_state
+    id: event_4
+
+  - platform: state
+    entity_id: !input event_5_entity
+    to: !input event_active_state
+    id: event_5
+
+  - platform: state
+    entity_id: !input event_6_entity
+    to: !input event_active_state
+    id: event_6
+
+  - platform: state
+    entity_id: !input event_7_entity
+    to: !input event_active_state
+    id: event_7
+
+  - platform: state
+    entity_id: !input event_8_entity
+    to: !input event_active_state
+    id: event_8
+
+  - platform: state
+    entity_id: !input event_9_entity
+    to: !input event_active_state
+    id: event_9
+
+  - platform: state
+    entity_id: !input event_10_entity
+    to: !input event_active_state
+    id: event_10
+
+  - platform: state
+    entity_id: !input event_11_entity
+    to: !input event_active_state
+    id: event_11
+
+  - platform: state
+    entity_id: !input event_12_entity
+    to: !input event_active_state
+    id: event_12
 
 action:
   - choose:
@@ -136,16 +338,108 @@ action:
 
       - conditions:
           - condition: trigger
-            id: appliance_event
+            id: event_1
         sequence:
           - service: "{{ notify_service }}"
             data:
               title: "{{ appliance_name }} event"
-              message: >
-                {% set entity = trigger.entity_id %}
-                {% set friendly = state_attr(entity, 'friendly_name') or entity %}
-                {% set custom_text = event_text_map.get(entity, default_event_text) %}
-                {{ custom_text }}
+              message: "{{ event_1_text }}"
 
-                Entity: {{ friendly }}
-                State: {{ trigger.to_state.state }}
+      - conditions:
+          - condition: trigger
+            id: event_2
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_2_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_3
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_3_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_4
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_4_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_5
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_5_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_6
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_6_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_7
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_7_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_8
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_8_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_9
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_9_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_10
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_10_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_11
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_11_text }}"
+
+      - conditions:
+          - condition: trigger
+            id: event_12
+        sequence:
+          - service: "{{ notify_service }}"
+            data:
+              title: "{{ appliance_name }} event"
+              message: "{{ event_12_text }}"
